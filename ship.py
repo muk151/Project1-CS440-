@@ -10,7 +10,7 @@ movements = [
     (0, 1)    # right
 ] 
 
-def gridNeighbors(cell): # returns neighbors in grid
+def gridNeighbors(cell, dimensions=(10, 10)): # returns neighbors in grid
 
     row = cell[0]
     col = cell[1]
@@ -20,7 +20,7 @@ def gridNeighbors(cell): # returns neighbors in grid
         newRow = row + rowChange
         newCol = col + colChange
          
-        if 0 <= newRow < 10 and 0 <= newCol < 10:
+        if 0 <= newRow < dimensions[0] and 0 <= newCol < dimensions[1]:
             neighbors.append((newRow, newCol))
         
     return neighbors
@@ -40,7 +40,7 @@ class Ship:
         return rowIsValid and colIsValid # will return true if the cell is in bounds
     
     def neighbors(self, cell):
-        return gridNeighbors(cell) # returns the neighbors of a cell
+        return gridNeighbors(cell, self.dimensions) # returns the neighbors of a cell
     
     def openNeighbors(self, cell): # will only return the neighbors that are open
         result = []
