@@ -85,13 +85,14 @@ class Ship:
                 currRow.append(symbol)
             completedRow.append(" ".join(currRow))
         return "\n".join(completedRow)
-    def openNeighborsCount(self, cell):
+
+def openNeighborsCount(self, cell):
         count = 0
         for neighbor in self.neighbors(cell):
             if neighbor in self.openCells:
                 count += 1
         return count
-    def findBlockedCellNeighbors(self, openCells, cell): # will find blocked cells that have only one open neighbor
+def findBlockedCellNeighbors(self, openCells, cell): # will find blocked cells that have only one open neighbor
         possibleOpenNeighbors = []
         for row in range(self.dimensions):
             for col in range(self.dimensions):
@@ -102,24 +103,90 @@ class Ship:
                     if numOpenNeighbors == 1:
                         possibleOpenNeighbors.append(cell)
         return possibleOpenNeighbors
-    def deadEndCells(self, openCells, dimensions): 
+def deadEndCells(self, openCells, dimensions): 
         deadEndCells = []
         for cell in openCells:
             numOpenNeighbors = self.openNeighborsCount(cell, openCells, dimensions)
             if numOpenNeighbors == 1:
                 deadEndCells.append(cell)
         return deadEndCells
-    def closedNeighbors(self, openCells, cell, dimensions):
+def closedNeighbors(self, openCells, cell, dimensions):
         closedNeighbors = []
         for neighbor in gridNeighbors(cell, dimensions):
             if neighbor not in openCells:
                 closedNeighbors.append(neighbor)
         return closedNeighbors
-    def generateShip(self, dimensions, rng=None):
+def generateShip(self, dimensions, rng=None):
         if rng is None:
             rng = random.Random()
+        
+        startRow = rng.randint(0, dimensions[0] - 1)
+        startCol = rng.randint(0, dimensions[1] - 1)
+        startCell = (startRow, startCol)
+            
+        openCells = {startCell}
+        potentialCandidates = self.findBlockedCellNeighbors(openCells, dimensions)
+
+        while len(potentialCandidates) > 0:
+            cellChosen = rng.choice(potentialCandidates)
+            openCells.add(cellChosen)
+            potentialCandidates = self.findBlockedCellNeighbors(openCells, dimensions)
+
+            
+        currentDeadEndCells = self.deadEndCells(openCells, dimensions)
+        originalDeadEndCells = len(currentDeadEndCells)
+        maxDeadEndCells = originalDeadEndCells / 2
+
+        while len(currentDeadEndCells) > maxDeadEndCells:
+            deadEndCellsAllowed = []
+
+            for deadEndCell in currentDeadEndCells:
+                closedNeighbors = self.closedNeighbors(openCells, deadEndCell, dimensions)
+                if len(closedNeighbors) > 0:
+                    deadEndCellsAllowed.append(deadEndCell)
+                
+            if len(deadEndCellsAllowed) == 0:
+                    break
+                
+            deadEndCellChosen = rng.choice(deadEndCellsAllowed)
+            closedNeighbors = self.closedNeighbors(openCells, deadEndCellChosen, dimensions)
+            cellToBeOpened = rng.choice(sorted(closedNeighbors))
+            openCells.add(cellToBeOpened)
+            currentDeadEndCells = self.deadEndCells(openCells, dimensions)
+        
+        ship = Ship(openCells, dimensions, self.shipSize)
+
+        return ship
+    
+def chooseInitialPos(self, ship, rng=None):
+        if rng is None:
+            rng = random.Random()
+        
+        positionPossibilities = sorted(ship.openCells)
+        positionChosen = rng.choice( positionPossibilities, 3) 
+
+        botPosition = positionChosen[0]
+        firePosition = positionChosen[1]
+        buttonPosition = positionChosen[2]
+        return botPosition, firePosition, buttonPosition 
+
+def main():
+     rng = random.Random(440)
+     ship = generateShip(10, rng)
+
+     bot, button, fire = chooseInitialPos(ship, rng)
+
+     print(ship.shipPicture(fire, bot, button))
+     print()
+
+             
+        
+
+
+
+
+
              
 
     
     
-        
