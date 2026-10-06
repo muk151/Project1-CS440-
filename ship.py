@@ -1,4 +1,3 @@
-import os 
 from collections import deque
 import random 
 
@@ -175,7 +174,7 @@ def chooseInitialPos(ship, rng=None):
         return botPosition, buttonPosition, firePosition 
 
 def main():
-     rng = random.Random(440)
+     rng = random.Random()
      ship = generateShip(10, rng)
 
      bot, button, fire = chooseInitialPos(ship, rng)
@@ -185,15 +184,3 @@ def main():
 
 if __name__ == "__main__":
         main()
-
-             
-        
-
-
-
-
-
-             
-
-    
-    
