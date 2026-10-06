@@ -48,18 +48,20 @@ class Ship:
                 result.append(neighbor)
         return result 
     def isConnected(self, cells):
+        cells = set(cells)  # Accept lists or sets and keep membership checks fast.
         if not cells:
             return False
         
-        visited = set()
-        queue = deque([cells[0]])
+        start = next(iter(cells))
+        visited = {start}
+        queue = deque([start])
         
         while queue:
             current = queue.popleft()
-            visited.add(current)
             
             for neighbor in self.openNeighbors(current):
                 if neighbor in cells and neighbor not in visited:
+                    visited.add(neighbor)  # Mark before queuing to avoid duplicates.
                     queue.append(neighbor)
         
         return len(visited) == len(cells)
