@@ -16,7 +16,7 @@ def gridNeighbors(cell, dimensions=(10, 10)): # returns neighbors in grid
     col = cell[1]
     neighbors = []
 
-    for rowChange, colChange in dimensions:
+    for rowChange, colChange in movements:
         newRow = row + rowChange
         newCol = col + colChange
          
@@ -35,8 +35,8 @@ class Ship:
     def inBounds(self, cell):
         row = cell[0]
         col = cell[1]
-        rowIsValid = 0 <= row < len(self.dimensions)
-        colIsValid = 0 <= col < len(self.dimensions[0])
+        rowIsValid = 0 <= row < self.dimensions[0]
+        colIsValid = 0 <= col < self.dimensions[1]
         return rowIsValid and colIsValid # will return true if the cell is in bounds
     
     def neighbors(self, cell):
@@ -67,11 +67,11 @@ class Ship:
     def shipPicture(self, fire, bot, button):
         completedRow = []
 
-        for row in range(len(self.dimensions)):
+        for row in range(self.dimensions[0]):
             currRow = []
-            for col in range(len(self.dimensions[0])):
+            for col in range(self.dimensions[1]):
                 cell = (row, col)
-                if col in self.openCells:
+                if cell in self.openCells:
                     symbol = "."  # open cell
                 else:
                     symbol = "#" # closed cell
@@ -86,54 +86,56 @@ class Ship:
             completedRow.append(" ".join(currRow))
         return "\n".join(completedRow)
 
-def openNeighborsCount(self, cell):
+def openNeighborsCount(cell, openCells, dimensions): # will count the number of open neighbors a cell has
         count = 0
-        for neighbor in self.neighbors(cell):
-            if neighbor in self.openCells:
+        for neighbor in gridNeighbors(cell, dimensions):
+            if neighbor in openCells:
                 count += 1
         return count
-def findBlockedCellNeighbors(self, openCells, cell): # will find blocked cells that have only one open neighbor
+def findBlockedCellNeighbors(openCells, dimensions): # will find blocked cells that have only one open neighbor
         possibleOpenNeighbors = []
-        for row in range(self.dimensions):
-            for col in range(self.dimensions):
+        for row in range(dimensions[0]):
+            for col in range(dimensions[1]):
                 cell = (row, col)
                 blockedCell = cell not in openCells
                 if blockedCell:
-                    numOpenNeighbors = self.openNeighborsCount(cell, openCells, self.dimensions)
+                    numOpenNeighbors = openNeighborsCount(cell, openCells, dimensions)
                     if numOpenNeighbors == 1:
                         possibleOpenNeighbors.append(cell)
         return possibleOpenNeighbors
-def deadEndCells(self, openCells, dimensions): 
+def deadEndCells(openCells, dimensions): 
         deadEndCells = []
         for cell in openCells:
-            numOpenNeighbors = self.openNeighborsCount(cell, openCells, dimensions)
+            numOpenNeighbors = openNeighborsCount(cell, openCells, dimensions)
             if numOpenNeighbors == 1:
                 deadEndCells.append(cell)
         return deadEndCells
-def closedNeighbors(self, openCells, cell, dimensions):
+def closedNeighbors(openCells, cell, dimensions):
         closedNeighbors = []
         for neighbor in gridNeighbors(cell, dimensions):
             if neighbor not in openCells:
                 closedNeighbors.append(neighbor)
         return closedNeighbors
-def generateShip(self, dimensions, rng=None):
+def generateShip(sizeOfShip, rng=None):
+        dimensions = (sizeOfShip, sizeOfShip)
+        
         if rng is None:
             rng = random.Random()
         
-        startRow = rng.randint(0, dimensions[0] - 1)
-        startCol = rng.randint(0, dimensions[1] - 1)
+        startRow = rng.randint(1, sizeOfShip - 2)
+        startCol = rng.randint(1, sizeOfShip - 2)
         startCell = (startRow, startCol)
             
         openCells = {startCell}
-        potentialCandidates = self.findBlockedCellNeighbors(openCells, dimensions)
+        potentialCandidates = findBlockedCellNeighbors(openCells, dimensions)
 
         while len(potentialCandidates) > 0:
             cellChosen = rng.choice(potentialCandidates)
             openCells.add(cellChosen)
-            potentialCandidates = self.findBlockedCellNeighbors(openCells, dimensions)
+            potentialCandidates = findBlockedCellNeighbors(openCells, dimensions)
 
             
-        currentDeadEndCells = self.deadEndCells(openCells, dimensions)
+        currentDeadEndCells = deadEndCells(openCells, dimensions)
         originalDeadEndCells = len(currentDeadEndCells)
         maxDeadEndCells = originalDeadEndCells / 2
 
@@ -141,34 +143,36 @@ def generateShip(self, dimensions, rng=None):
             deadEndCellsAllowed = []
 
             for deadEndCell in currentDeadEndCells:
-                closedNeighbors = self.closedNeighbors(openCells, deadEndCell, dimensions)
-                if len(closedNeighbors) > 0:
+                adjacentNeighbors = closedNeighbors(openCells, deadEndCell, dimensions)
+                if len(adjacentNeighbors) > 0:
                     deadEndCellsAllowed.append(deadEndCell)
                 
             if len(deadEndCellsAllowed) == 0:
                     break
                 
             deadEndCellChosen = rng.choice(deadEndCellsAllowed)
-            closedNeighbors = self.closedNeighbors(openCells, deadEndCellChosen, dimensions)
-            cellToBeOpened = rng.choice(sorted(closedNeighbors))
+            adjacentNeighbors = closedNeighbors(openCells, deadEndCellChosen, dimensions)
+            cellToBeOpened = rng.choice(sorted(adjacentNeighbors))
             openCells.add(cellToBeOpened)
-            currentDeadEndCells = self.deadEndCells(openCells, dimensions)
+            currentDeadEndCells = deadEndCells(openCells, dimensions)
         
-        ship = Ship(openCells, dimensions, self.shipSize)
+        ship = Ship(openCells, dimensions, sizeOfShip)
+
+        
 
         return ship
     
-def chooseInitialPos(self, ship, rng=None):
+def chooseInitialPos(ship, rng=None):
         if rng is None:
             rng = random.Random()
         
         positionPossibilities = sorted(ship.openCells)
-        positionChosen = rng.choice( positionPossibilities, 3) 
+        positionChosen = rng.sample(positionPossibilities, 3) 
 
         botPosition = positionChosen[0]
-        firePosition = positionChosen[1]
-        buttonPosition = positionChosen[2]
-        return botPosition, firePosition, buttonPosition 
+        buttonPosition = positionChosen[1]
+        firePosition = positionChosen[2]
+        return botPosition, buttonPosition, firePosition 
 
 def main():
      rng = random.Random(440)
@@ -176,8 +180,11 @@ def main():
 
      bot, button, fire = chooseInitialPos(ship, rng)
 
-     print(ship.shipPicture(fire, bot, button))
+     print(ship.shipPicture({fire}, bot, button))
      print()
+
+if __name__ == "__main__":
+        main()
 
              
         
