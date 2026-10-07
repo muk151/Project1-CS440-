@@ -14,3 +14,4 @@ class bot1:
             return botPos
         self.stepCount += 1
         return self.initialPlan[self.stepCount]
+    
