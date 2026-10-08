@@ -7,9 +7,10 @@ from pathfinding import shortest_path
 from ship import generateShip, chooseInitialPos
 
 shipSize = 10 # size of ship
-numTrials = 200 # number of trials for testing each bot
+numTrials = 100 # number of trials for testing each bot
 qValuesNum = 10 # number of q values to test each bot
 botNumbers = [1,2,3,4] # list of bots
+outcomes = ["success", "trapped by fire", "moved into fire", "burned after fire spread", "button burned", "step limit reached" ]
 
 def spreadFire(ship, fireCells, q, rng):
     nextFireCells = set(fireCells)
@@ -40,31 +41,36 @@ def botMove(bot, number, ship, botPos, buttonPos, fireCells, initialFire, q): # 
 def runBotSim(ship, botStart, buttonPos, initialFire, q, number, fireSeed):
     botPos = botStart
     fireCells = {initialFire}
-    fireRng = random.Random(fireSeed) 
+    fireRng = random.Random(fireSeed)
     if number == 1:
         botStrat = bot1()
     else: 
         botStrat = None
     maxSteps = shipSize * shipSize * 2
 
-    for b in range(maxSteps):
+    for step in range(maxSteps):
         nextBotPos = botMove(botStrat, number, ship, botPos, buttonPos, fireCells, initialFire, q)
-        if nextBotPos == botPos and number != 4:
-            return False
+        if nextBotPos == botPos:
+            path = shortest_path(ship, botPos, buttonPos, fireCells)
+            if number != 4 or path is None:
+                return "trapped by fire", step
         botPos = nextBotPos
-        if botPos in fireCells:
-            return False
-        if botPos == buttonPos:
-            return True
-        fireCells = spreadFire(ship, fireCells, q, fireRng)
-        if botPos in fireCells or buttonPos in fireCells:
-            return False
-    
-    return False
 
+        if botPos in fireCells:
+            return "moved into fire", step + 1
+        if botPos == buttonPos: 
+            return "success", step + 1
+        
+        fireCells = spreadFire(ship, fireCells, q, fireRng)
+        if botPos in fireCells:
+            return "burned after fire spread", step + 1
+        if buttonPos in fireCells:
+            return "button burned", step + 1
+    
+    return "step limit reached", maxSteps
 def testRuns():
     rng = random.Random()
-    qValues = []
+    qValues = [0.0, 0.75, 1.0]
     results = {}
 
     while len(qValues) < qValuesNum:
@@ -76,7 +82,9 @@ def testRuns():
     for botNum in botNumbers:
         results[botNum] = {}
         for q in qValues:
-            results[botNum][q] = 0
+            results[botNum][q] = {}
+            for outcome in outcomes:
+                results[botNum][q][outcome] = 0
     
     scenarios = []
     for c in range(numTrials):
@@ -88,19 +96,21 @@ def testRuns():
     for q in qValues:
         for ship, botStart, buttonPos, initialFire, fireSeed in scenarios:
             for botNum in botNumbers:
-                success = runBotSim(ship, botStart, buttonPos, initialFire, q, botNum, fireSeed)
-                if success:
-                    results[botNum][q] += 1
+                outcome, c = runBotSim(ship, botStart, buttonPos, initialFire, q, botNum, fireSeed)
+                results[botNum][q][outcome] += 1
     
     return results, qValues
 
 def main():
     results, qValues = testRuns()
     for q in qValues:
-        print(f"q = {q}")
+        print("q = " + str(q))
         for botNum in botNumbers:
-            successRate = results[botNum][q]
-            print(f"Bot {botNum}: {successRate}/{numTrials}")
+            botResults = results[botNum][q]
+            print("Bot " + str(botNum) + ": " + str(botResults["success"]) + "/" + str(numTrials) + " successes")
+            for outcome in outcomes[1:]:
+                print("  " + outcome + ": " + str(botResults[outcome]))
+
         print()
 
 if __name__ == "__main__":
