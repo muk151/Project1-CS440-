@@ -104,20 +104,20 @@ def findBlockedCellNeighbors(openCells, dimensions): # will find blocked cells t
                     if numOpenNeighbors == 1:
                         possibleOpenNeighbors.append(cell)
         return possibleOpenNeighbors
-def deadEndCells(openCells, dimensions): 
+def deadEndCells(openCells, dimensions): # will find all dead end cells in the ship that have only one open neighbor
         deadEndCells = []
         for cell in openCells:
             numOpenNeighbors = openNeighborsCount(cell, openCells, dimensions)
             if numOpenNeighbors == 1:
                 deadEndCells.append(cell)
         return deadEndCells
-def closedNeighbors(openCells, cell, dimensions):
+def closedNeighbors(openCells, cell, dimensions): # will find all closed neighbors of a cell
         closedNeighbors = []
         for neighbor in gridNeighbors(cell, dimensions):
             if neighbor not in openCells:
                 closedNeighbors.append(neighbor)
         return closedNeighbors
-def generateShip(sizeOfShip, rng=None):
+def generateShip(sizeOfShip, rng=None): # generates a ship with random open and closed cells and makes sure that the ship is connected and does not have any dead ends
         dimensions = (sizeOfShip, sizeOfShip)
         
         if rng is None:
@@ -130,7 +130,7 @@ def generateShip(sizeOfShip, rng=None):
         openCells = {startCell}
         potentialCandidates = findBlockedCellNeighbors(openCells, dimensions)
 
-        while len(potentialCandidates) > 0:
+        while len(potentialCandidates) > 0: 
             cellChosen = rng.choice(potentialCandidates)
             openCells.add(cellChosen)
             potentialCandidates = findBlockedCellNeighbors(openCells, dimensions)
@@ -163,7 +163,7 @@ def generateShip(sizeOfShip, rng=None):
 
         return ship
     
-def chooseInitialPos(ship, rng=None):
+def chooseInitialPos(ship, rng=None): # chooses the initial positions for the bot, button, and fire in the ship
         if rng is None:
             rng = random.Random()
         
@@ -175,7 +175,7 @@ def chooseInitialPos(ship, rng=None):
         firePosition = positionChosen[2]
         return botPosition, buttonPosition, firePosition 
 
-def main():
+def main(): # generates a ship and chooses initial positions for the bot, button, and fire and then prints the ship with the initial positions
      rng = random.Random()
      ship = generateShip(10, rng)
 

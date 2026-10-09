@@ -12,6 +12,6 @@ class bot1:
             self.isPlanned = True #checks True to make sure bot will not plan again in next move
         if self.initialPlan is None or len(self.initialPlan) < 2: #No path exists or the bot is already at the button
             return botPos
-        self.stepCount += 1
+        self.stepCount += 1 # increments steps taken to reach button
         return self.initialPlan[self.stepCount]
     
